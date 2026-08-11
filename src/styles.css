@@ -450,3 +450,23 @@ button.link-button:hover { background: none; color: var(--primary-dark); text-de
     background: var(--surface); border-top: 1px solid var(--border); z-index: 5;
   }
 }
+
+/* Public customer share page */
+.share-page { min-height: 100vh; background: var(--bg); }
+.share-header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 16px 24px; display: flex; justify-content: center;
+}
+.share-logo { height: 52px; width: auto; }
+.share-content { max-width: 640px; margin: 0 auto; padding: 28px 20px 60px; }
+.share-content h1 { font-size: 1.5rem; margin: 0 0 6px; }
+.share-contact { color: var(--muted); margin-bottom: 24px; }
+.share-contact p { margin: 2px 0; }
+.share-section { margin-bottom: 26px; }
+.share-section h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); margin: 0 0 10px; }
+.share-notes {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+  white-space: pre-wrap; margin: 0;
+}
+.share-job-group { margin-bottom: 16px; }
+.share-job-group h3 { font-size: 0.92rem; margin: 0 0 6px; }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase, Job, JobStatus, Customer } from "../supabaseClient";
+import { supabase, Job, JobStatus, Customer, Role } from "../supabaseClient";
 import StatusBadge from "../components/StatusBadge";
 import NewJobModal from "../components/NewJobModal";
 import JobModal from "../components/JobModal";
@@ -29,6 +29,7 @@ export default function Board({ session }: { session: Session }) {
   const [draggingJobId, setDraggingJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("board");
+  const [role, setRole] = useState<Role>("member");
 
   useEffect(() => {
     void loadAll();
@@ -42,16 +43,19 @@ export default function Board({ session }: { session: Session }) {
       { data: checklistData },
       { data: fileData },
       { data: customerData },
+      { data: profileData },
     ] = await Promise.all([
       supabase.from("jobs").select("*").order("created_at", { ascending: false }),
       supabase.from("job_statuses").select("*").order("sort_order", { ascending: true }),
       supabase.from("checklist_items").select("job_id, is_done"),
       supabase.from("job_files").select("job_id"),
       supabase.from("customers").select("*").order("name", { ascending: true }),
+      supabase.from("profiles").select("role").eq("id", session.user.id).single(),
     ]);
     setJobs(jobData ?? []);
     setStatuses(statusData ?? []);
     setCustomers(customerData ?? []);
+    setRole((profileData?.role as Role) ?? "member");
 
     const nextCounts: Record<string, JobCounts> = {};
     for (const item of checklistData ?? []) {
@@ -302,6 +306,7 @@ export default function Board({ session }: { session: Session }) {
           job={selectedJob}
           statuses={statuses}
           userId={session.user.id}
+          isAdmin={role === "admin"}
           onClose={() => setSelectedJob(null)}
           onChanged={loadAll}
         />

@@ -28,12 +28,14 @@ export default function JobModal({
   job,
   statuses,
   userId,
+  isAdmin,
   onClose,
   onChanged,
 }: {
   job: Job;
   statuses: JobStatus[];
   userId: string;
+  isAdmin: boolean;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -200,7 +202,7 @@ export default function JobModal({
           />
         </div>
 
-        <PaymentsSection jobId={job.id} />
+        {isAdmin && <PaymentsSection jobId={job.id} />}
 
         <div className="job-section">
           <label>

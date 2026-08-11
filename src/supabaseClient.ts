@@ -36,6 +36,8 @@ export type Customer = {
   email: string | null;
   address: string | null;
   notes: string | null;
+  customer_notes: string | null;
+  share_token: string;
   created_at: string;
 };
 
@@ -92,6 +94,15 @@ export type JobFile = {
   category: FileCategory;
   uploaded_by: string | null;
   uploaded_at: string;
+};
+
+export type Role = "admin" | "member";
+
+export type Profile = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: Role;
 };
 
 export type QuickNote = {

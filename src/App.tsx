@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
 import Login from "./pages/Login";
 import Board from "./pages/Board";
+import CustomerSharePage from "./pages/CustomerSharePage";
 
-export default function App() {
+function AuthGate() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,4 +26,13 @@ export default function App() {
   }
 
   return session ? <Board session={session} /> : <Login />;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/share/:token" element={<CustomerSharePage />} />
+      <Route path="*" element={<AuthGate />} />
+    </Routes>
+  );
 }

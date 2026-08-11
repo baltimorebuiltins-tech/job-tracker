@@ -20,7 +20,11 @@ export default function CustomerDetailModal({
   const [phone, setPhone] = useState(customer.phone ?? "");
   const [email, setEmail] = useState(customer.email ?? "");
   const [address, setAddress] = useState(customer.address ?? "");
+  const [customerNotes, setCustomerNotes] = useState(customer.customer_notes ?? "");
   const [drawings, setDrawings] = useState<(JobFile & { jobName: string })[]>([]);
+  const [copied, setCopied] = useState(false);
+
+  const shareUrl = `${window.location.origin}/share/${customer.share_token}`;
 
   useEffect(() => {
     void loadDrawings();
@@ -54,6 +58,20 @@ export default function CustomerDetailModal({
     onChanged();
   }
 
+  async function saveCustomerNotes() {
+    await supabase
+      .from("customers")
+      .update({ customer_notes: customerNotes || null })
+      .eq("id", customer.id);
+    onChanged();
+  }
+
+  async function copyShareLink() {
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal modal-wide" onClick={(e) => e.stopPropagation()}>
@@ -75,6 +93,33 @@ export default function CustomerDetailModal({
             <input value={address} onChange={(e) => setAddress(e.target.value)} onBlur={saveContact} />
           </label>
         </form>
+
+        <div className="job-section">
+          <label>Customer-facing notes</label>
+          <p className="muted">
+            Only what you write here shows up on their view-only page — nothing else from your
+            internal notes.
+          </p>
+          <textarea
+            value={customerNotes}
+            onChange={(e) => setCustomerNotes(e.target.value)}
+            onBlur={saveCustomerNotes}
+            rows={3}
+            placeholder="Notes visible to this customer…"
+          />
+        </div>
+
+        <div className="job-section">
+          <label>Their view-only page</label>
+          <p className="muted">
+            Send this link so they can see their info, drawings, and the notes above — no login
+            needed, and they can't edit anything.
+          </p>
+          <div className="calendar-sync-row">
+            <input readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
+            <button onClick={copyShareLink}>{copied ? "Copied!" : "Copy link"}</button>
+          </div>
+        </div>
 
         <div className="job-section">
           <label>Jobs ({jobs.length})</label>
