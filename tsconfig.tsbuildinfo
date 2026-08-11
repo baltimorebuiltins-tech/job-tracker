@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/supabaseClient.ts","./src/vite-env.d.ts","./src/components/JobModal.tsx","./src/components/NewJobModal.tsx","./src/components/StatusBadge.tsx","./src/pages/Board.tsx","./src/pages/Login.tsx"],"version":"5.9.3"}
