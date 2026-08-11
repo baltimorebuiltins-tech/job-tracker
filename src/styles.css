@@ -277,6 +277,38 @@ button.link-button:hover { background: none; color: var(--primary-dark); text-de
 }
 .customer-job-row:hover { background: #eef0f3; }
 
+/* Board page (week strip + kanban) */
+.board-page { display: flex; flex-direction: column; }
+.week-strip { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.week-strip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+.week-strip-title { display: flex; align-items: baseline; gap: 8px; }
+.week-strip-title h3 { margin: 0; font-size: 1rem; }
+.week-strip-nav { display: flex; gap: 6px; }
+.week-strip-nav button { padding: 6px 12px; }
+.week-strip-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.week-strip-day {
+  background: #f8f9fa; border-radius: 8px; padding: 8px; min-height: 74px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.week-strip-day.is-today { background: #fff7ed; box-shadow: inset 0 0 0 1px var(--primary); }
+.week-strip-day-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); }
+.week-strip-day-label span { font-weight: 400; }
+.week-strip-jobs { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+
+/* Quick notes */
+.quick-notes { max-width: 640px; }
+.quick-note-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.quick-note-form textarea {
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; resize: vertical;
+}
+.quick-note-form button { align-self: flex-end; }
+.quick-note-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.quick-note-item {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px;
+}
+.quick-note-item p { margin: 0 0 8px; white-space: pre-wrap; }
+.quick-note-meta { display: flex; justify-content: space-between; align-items: center; }
+
 /* Reminders banner */
 .reminders-banner {
   background: #fff7ed; border-bottom: 1px solid #fed7aa;
@@ -380,6 +412,8 @@ button.link-button:hover { background: none; color: var(--primary-dark); text-de
   .search-input { flex: 1; min-width: 0; }
   .board { flex-direction: column; padding: 14px 12px; overflow-x: visible; }
   .board-column { max-width: 100%; min-width: 0; }
+  .week-strip-days { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 90px; overflow-x: auto; padding-bottom: 4px; }
+  .week-strip-header { flex-wrap: nowrap; }
   .tab-bar { padding: 8px 12px 0; }
   .tab { padding: 12px 14px; font-size: 0.88rem; min-height: 44px; }
   .tab-content { padding: 16px 12px; }

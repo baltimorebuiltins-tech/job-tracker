@@ -93,3 +93,10 @@ export type JobFile = {
   uploaded_by: string | null;
   uploaded_at: string;
 };
+
+export type QuickNote = {
+  id: string;
+  text: string;
+  created_by: string | null;
+  created_at: string;
+};

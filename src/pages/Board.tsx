@@ -10,8 +10,10 @@ import CalendarSyncPanel from "../components/CalendarSyncPanel";
 import RemindersBanner from "../components/RemindersBanner";
 import NewCustomerModal from "../components/NewCustomerModal";
 import CustomerDetailModal from "../components/CustomerDetailModal";
+import WeekStrip from "../components/WeekStrip";
+import QuickNotes from "../components/QuickNotes";
 
-type Tab = "board" | "calendar" | "customers" | string;
+type Tab = "board" | "calendar" | "customers" | "notes" | string;
 
 export default function Board({ session }: { session: Session }) {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -26,7 +28,7 @@ export default function Board({ session }: { session: Session }) {
   const [loading, setLoading] = useState(true);
   const [draggingJobId, setDraggingJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("calendar");
+  const [activeTab, setActiveTab] = useState<Tab>("board");
 
   useEffect(() => {
     void loadAll();
@@ -158,6 +160,12 @@ export default function Board({ session }: { session: Session }) {
           Customers
           <span className="tab-count">{customers.length}</span>
         </button>
+        <button
+          className={`tab${activeTab === "notes" ? " active" : ""}`}
+          onClick={() => setActiveTab("notes")}
+        >
+          Quick Notes
+        </button>
       </nav>
 
       {loading ? (
@@ -193,8 +201,16 @@ export default function Board({ session }: { session: Session }) {
             {filteredCustomers.length === 0 && <p className="muted">No customers yet.</p>}
           </div>
         </div>
+      ) : activeTab === "notes" ? (
+        <div className="tab-content">
+          <QuickNotes session={session} />
+        </div>
       ) : activeTab === "board" ? (
-        <div className="board">
+        <div className="board-page">
+          <div className="tab-content">
+            <WeekStrip jobs={filteredJobs} statuses={statuses} onOpenJob={setSelectedJob} />
+          </div>
+          <div className="board">
           {columns.map((col) => (
             <div
               key={col.status.id}
@@ -231,6 +247,7 @@ export default function Board({ session }: { session: Session }) {
               {col.jobs.length === 0 && <p className="muted empty-col">No jobs</p>}
             </div>
           ))}
+          </div>
         </div>
       ) : (
         <div className="tab-content">
