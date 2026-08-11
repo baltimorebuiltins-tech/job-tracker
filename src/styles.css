@@ -324,6 +324,16 @@ button.link-button:hover { background: none; color: var(--primary-dark); text-de
 }
 
 /* Calendar */
+.calendar-sync { margin-bottom: 14px; }
+.calendar-sync-panel {
+  margin-top: 10px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;
+  padding: 12px 14px; max-width: 640px;
+}
+.calendar-sync-row { display: flex; gap: 8px; margin-top: 8px; }
+.calendar-sync-row input {
+  flex: 1; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; background: white;
+}
 .calendar { max-width: 900px; }
 .calendar-header {
   display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
@@ -345,17 +355,64 @@ button.link-button:hover { background: none; color: var(--primary-dark); text-de
   text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
 }
 
+/* Calendar agenda (mobile) */
+.calendar-agenda { display: flex; flex-direction: column; gap: 10px; max-width: 100%; }
+.agenda-day { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.agenda-day.is-today { border-color: var(--primary); }
+.agenda-day-label {
+  background: #f8f9fa; padding: 8px 12px; font-weight: 700; font-size: 0.8rem; color: var(--muted);
+}
+.agenda-day.is-today .agenda-day-label { background: #fff7ed; color: var(--primary-dark); }
+.agenda-day-jobs { display: flex; flex-direction: column; }
+.agenda-job-row {
+  width: 100%; background: var(--surface); color: var(--ink); font-weight: 500;
+  display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 0;
+  border-bottom: 1px solid var(--border); text-align: left; min-height: 48px;
+}
+.agenda-job-row:last-child { border-bottom: none; }
+.agenda-job-row:hover { background: #f8f9fa; }
+.agenda-job-dot { width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0; }
+.agenda-job-name { flex: 1; }
+
 @media (max-width: 720px) {
   .topbar { padding: 12px 16px; }
   .topbar-actions { width: 100%; }
   .search-input { flex: 1; min-width: 0; }
   .board { flex-direction: column; padding: 14px 12px; overflow-x: visible; }
   .board-column { max-width: 100%; min-width: 0; }
-  .modal { padding: 18px; border-radius: 12px; }
   .tab-bar { padding: 8px 12px 0; }
+  .tab { padding: 12px 14px; font-size: 0.88rem; min-height: 44px; }
   .tab-content { padding: 16px 12px; }
   .reminders-summary, .reminders-list { padding-left: 16px; padding-right: 16px; }
+  .reminders-summary { min-height: 48px; }
+  .reminders-item { min-height: 44px; }
   .calendar-cell { min-height: 60px; padding: 4px; }
   .calendar-job-chip { font-size: 0.62rem; }
   .status-list-grid { grid-template-columns: 1fr; }
+
+  /* Bigger touch targets everywhere on mobile */
+  button { min-height: 42px; font-size: 0.92rem; }
+  button.link-button { min-height: auto; }
+  .job-form input, .job-form select, .job-form textarea,
+  .job-detail-grid select, .search-input, .upload-row select,
+  .inline-form input, .payment-amount-input {
+    min-height: 42px; font-size: 16px; /* 16px prevents iOS auto-zoom on focus */
+  }
+  .checklist-row input[type="checkbox"], .payments-list input[type="checkbox"] {
+    width: 22px; height: 22px;
+  }
+  .job-card, .customer-card, .customer-job-row, .agenda-job-row {
+    min-height: 48px;
+  }
+
+  /* Full-screen modals on mobile for easier interaction */
+  .modal-backdrop { padding: 0; align-items: stretch; }
+  .modal {
+    width: 100%; max-width: 100%; height: 100%; max-height: 100%;
+    border-radius: 0; padding: 16px; padding-bottom: 90px;
+  }
+  .modal-actions {
+    position: sticky; bottom: -16px; margin: 16px -16px -16px; padding: 12px 16px;
+    background: var(--surface); border-top: 1px solid var(--border); z-index: 5;
+  }
 }

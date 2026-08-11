@@ -6,6 +6,7 @@ import NewJobModal from "../components/NewJobModal";
 import JobModal from "../components/JobModal";
 import JobCard, { JobCounts } from "../components/JobCard";
 import CalendarView from "../components/CalendarView";
+import CalendarSyncPanel from "../components/CalendarSyncPanel";
 import RemindersBanner from "../components/RemindersBanner";
 import NewCustomerModal from "../components/NewCustomerModal";
 import CustomerDetailModal from "../components/CustomerDetailModal";
@@ -25,7 +26,7 @@ export default function Board({ session }: { session: Session }) {
   const [loading, setLoading] = useState(true);
   const [draggingJobId, setDraggingJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("board");
+  const [activeTab, setActiveTab] = useState<Tab>("calendar");
 
   useEffect(() => {
     void loadAll();
@@ -163,6 +164,7 @@ export default function Board({ session }: { session: Session }) {
         <div className="center-screen">Loading jobs…</div>
       ) : activeTab === "calendar" ? (
         <div className="tab-content">
+          <CalendarSyncPanel />
           <CalendarView jobs={filteredJobs} statuses={statuses} onOpenJob={setSelectedJob} />
         </div>
       ) : activeTab === "customers" ? (
