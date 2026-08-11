@@ -244,6 +244,39 @@ button.link-button:hover { background: none; color: var(--primary-dark); text-de
 .upload-row select { padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; }
 .upload-row input[type="file"] { flex: 1; min-width: 180px; font-size: 0.85rem; }
 
+/* Payments */
+.payments-list { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.payment-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap;
+}
+.payment-row-right { display: flex; align-items: center; gap: 6px; }
+.payment-currency { color: var(--muted); font-size: 0.85rem; }
+.payment-amount-input {
+  width: 90px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem;
+}
+.payment-date { font-size: 0.75rem; }
+.payment-total { margin-top: 10px; font-weight: 600; }
+
+/* Customers */
+.customers-toolbar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+.customers-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;
+}
+.customer-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+  padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 4px;
+  color: var(--ink); font-weight: 400; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.customer-card:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1); }
+.customer-card-name { font-weight: 650; font-size: 0.98rem; }
+.customer-job-list { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.customer-job-row {
+  width: 100%; background: #f8f9fa; color: var(--ink); font-weight: 500; padding: 9px 12px;
+  border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.customer-job-row:hover { background: #eef0f3; }
+
 /* Reminders banner */
 .reminders-banner {
   background: #fff7ed; border-bottom: 1px solid #fed7aa;

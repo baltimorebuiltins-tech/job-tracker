@@ -1,28 +1,29 @@
 import { FormEvent, useState } from "react";
-import { supabase, JobStatus } from "../supabaseClient";
+import { supabase, JobStatus, Customer } from "../supabaseClient";
 
-function slugFolder(jobNumber: string | null, name: string) {
-  const base = `${jobNumber ? jobNumber + " " : ""}${name}`;
+function slugFolder(jobNumber: string, name: string) {
+  const base = `${jobNumber} ${name}`;
   const cleaned = base.replace(/[\\/:*?"<>|]/g, "").trim();
   return `/${cleaned || "Untitled Job"}`;
 }
 
 export default function NewJobModal({
   statuses,
+  customers,
   userId,
   onClose,
   onCreated,
 }: {
   statuses: JobStatus[];
+  customers: Customer[];
   userId: string;
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const [jobNumber, setJobNumber] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [name, setName] = useState("");
-  const [client, setClient] = useState("");
   const [address, setAddress] = useState("");
-  const [status, setStatus] = useState(statuses[0]?.name ?? "Bid");
+  const [status, setStatus] = useState(statuses[0]?.name ?? "Design");
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,42 +33,80 @@ export default function NewJobModal({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const dropboxFolderPath = slugFolder(jobNumber || null, name);
-    const { error: err } = await supabase.from("jobs").insert({
-      job_number: jobNumber || null,
-      name,
-      client: client || null,
-      address: address || null,
-      status,
-      due_date: dueDate || null,
-      notes: notes || null,
-      dropbox_folder_path: dropboxFolderPath,
-      created_by: userId,
-    });
-    setBusy(false);
-    if (err) {
-      setError(err.message);
-      return;
+
+    try {
+      // Find an existing customer with this name, or create one.
+      let customerId: string | null = null;
+      const trimmedName = customerName.trim();
+      if (trimmedName) {
+        const existing = customers.find(
+          (c) => c.name.toLowerCase() === trimmedName.toLowerCase()
+        );
+        if (existing) {
+          customerId = existing.id;
+        } else {
+          const { data: newCustomer, error: customerErr } = await supabase
+            .from("customers")
+            .insert({ name: trimmedName })
+            .select()
+            .single();
+          if (customerErr) throw customerErr;
+          customerId = newCustomer.id;
+        }
+      }
+
+      const { data: job, error: jobErr } = await supabase
+        .from("jobs")
+        .insert({
+          name,
+          customer_id: customerId,
+          address: address || null,
+          status,
+          due_date: dueDate || null,
+          notes: notes || null,
+          created_by: userId,
+        })
+        .select()
+        .single();
+      if (jobErr) throw jobErr;
+
+      // Now that we know the auto-assigned job number, set the Dropbox folder path.
+      await supabase
+        .from("jobs")
+        .update({ dropbox_folder_path: slugFolder(job.job_number, job.name) })
+        .eq("id", job.id);
+
+      onCreated();
+    } catch (err: any) {
+      setError(err.message ?? "Something went wrong.");
+    } finally {
+      setBusy(false);
     }
-    onCreated();
   }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>New job</h2>
+        <p className="muted">Job # is assigned automatically.</p>
         <form onSubmit={handleSubmit} className="job-form">
-          <label>
-            Job #
-            <input value={jobNumber} onChange={(e) => setJobNumber(e.target.value)} />
-          </label>
           <label>
             Job name *
             <input value={name} onChange={(e) => setName(e.target.value)} required />
           </label>
           <label>
-            Client
-            <input value={client} onChange={(e) => setClient(e.target.value)} />
+            Customer
+            <input
+              list="customer-options"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Start typing an existing customer or add a new one…"
+            />
+            <datalist id="customer-options">
+              {customers.map((c) => (
+                <option key={c.id} value={c.name} />
+              ))}
+            </datalist>
           </label>
           <label>
             Address

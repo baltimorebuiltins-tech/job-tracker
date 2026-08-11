@@ -9,6 +9,7 @@ import {
   FILE_CATEGORIES,
 } from "../supabaseClient";
 import StatusBadge from "./StatusBadge";
+import PaymentsSection from "./PaymentsSection";
 
 function categoryFolder(category: FileCategory) {
   switch (category) {
@@ -198,6 +199,8 @@ export default function JobModal({
             rows={3}
           />
         </div>
+
+        <PaymentsSection jobId={job.id} />
 
         <div className="job-section">
           <label>

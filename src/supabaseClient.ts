@@ -17,6 +17,7 @@ export type Job = {
   job_number: string | null;
   name: string;
   client: string | null;
+  customer_id: string | null;
   address: string | null;
   status: string;
   start_date: string | null;
@@ -26,6 +27,34 @@ export type Job = {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type Customer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type PaymentMilestone = "deposit" | "materials" | "install" | "paid_in_full";
+
+export const PAYMENT_MILESTONES: { value: PaymentMilestone; label: string }[] = [
+  { value: "deposit", label: "Deposit" },
+  { value: "materials", label: "Materials / Production" },
+  { value: "install", label: "Install" },
+  { value: "paid_in_full", label: "Paid in Full" },
+];
+
+export type JobPayment = {
+  id: string;
+  job_id: string;
+  milestone: PaymentMilestone;
+  amount: number | null;
+  is_paid: boolean;
+  paid_date: string | null;
 };
 
 export type JobStatus = {

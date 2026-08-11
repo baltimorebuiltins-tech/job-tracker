@@ -1,22 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase, Job, JobStatus } from "../supabaseClient";
+import { supabase, Job, JobStatus, Customer } from "../supabaseClient";
 import StatusBadge from "../components/StatusBadge";
 import NewJobModal from "../components/NewJobModal";
 import JobModal from "../components/JobModal";
 import JobCard, { JobCounts } from "../components/JobCard";
 import CalendarView from "../components/CalendarView";
 import RemindersBanner from "../components/RemindersBanner";
+import NewCustomerModal from "../components/NewCustomerModal";
+import CustomerDetailModal from "../components/CustomerDetailModal";
 
-type Tab = "board" | "calendar" | string;
+type Tab = "board" | "calendar" | "customers" | string;
 
 export default function Board({ session }: { session: Session }) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [statuses, setStatuses] = useState<JobStatus[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [counts, setCounts] = useState<Record<string, JobCounts>>({});
   const [search, setSearch] = useState("");
   const [showNewJob, setShowNewJob] = useState(false);
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [draggingJobId, setDraggingJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
@@ -28,15 +33,22 @@ export default function Board({ session }: { session: Session }) {
 
   async function loadAll() {
     setLoading(true);
-    const [{ data: jobData }, { data: statusData }, { data: checklistData }, { data: fileData }] =
-      await Promise.all([
-        supabase.from("jobs").select("*").order("created_at", { ascending: false }),
-        supabase.from("job_statuses").select("*").order("sort_order", { ascending: true }),
-        supabase.from("checklist_items").select("job_id, is_done"),
-        supabase.from("job_files").select("job_id"),
-      ]);
+    const [
+      { data: jobData },
+      { data: statusData },
+      { data: checklistData },
+      { data: fileData },
+      { data: customerData },
+    ] = await Promise.all([
+      supabase.from("jobs").select("*").order("created_at", { ascending: false }),
+      supabase.from("job_statuses").select("*").order("sort_order", { ascending: true }),
+      supabase.from("checklist_items").select("job_id, is_done"),
+      supabase.from("job_files").select("job_id"),
+      supabase.from("customers").select("*").order("name", { ascending: true }),
+    ]);
     setJobs(jobData ?? []);
     setStatuses(statusData ?? []);
+    setCustomers(customerData ?? []);
 
     const nextCounts: Record<string, JobCounts> = {};
     for (const item of checklistData ?? []) {
@@ -63,6 +75,12 @@ export default function Board({ session }: { session: Session }) {
         (j.address ?? "").toLowerCase().includes(q)
     );
   }, [jobs, search]);
+
+  const filteredCustomers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return customers;
+    return customers.filter((c) => c.name.toLowerCase().includes(q));
+  }, [customers, search]);
 
   const columns = useMemo(() => {
     return statuses.map((s) => ({
@@ -93,7 +111,7 @@ export default function Board({ session }: { session: Session }) {
         <div className="topbar-actions">
           <input
             className="search-input"
-            placeholder="Search jobs…"
+            placeholder="Search jobs or customers…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -132,6 +150,13 @@ export default function Board({ session }: { session: Session }) {
         >
           Calendar
         </button>
+        <button
+          className={`tab${activeTab === "customers" ? " active" : ""}`}
+          onClick={() => setActiveTab("customers")}
+        >
+          Customers
+          <span className="tab-count">{customers.length}</span>
+        </button>
       </nav>
 
       {loading ? (
@@ -139,6 +164,32 @@ export default function Board({ session }: { session: Session }) {
       ) : activeTab === "calendar" ? (
         <div className="tab-content">
           <CalendarView jobs={filteredJobs} statuses={statuses} onOpenJob={setSelectedJob} />
+        </div>
+      ) : activeTab === "customers" ? (
+        <div className="tab-content">
+          <div className="customers-toolbar">
+            <button onClick={() => setShowNewCustomer(true)}>+ New customer</button>
+          </div>
+          <div className="customers-grid">
+            {filteredCustomers.map((c) => {
+              const customerJobs = jobs.filter((j) => j.customer_id === c.id);
+              return (
+                <button
+                  key={c.id}
+                  className="customer-card"
+                  onClick={() => setSelectedCustomer(c)}
+                >
+                  <span className="customer-card-name">{c.name}</span>
+                  {c.phone && <span className="muted">{c.phone}</span>}
+                  {c.email && <span className="muted">{c.email}</span>}
+                  <span className="muted">
+                    {customerJobs.length} job{customerJobs.length === 1 ? "" : "s"}
+                  </span>
+                </button>
+              );
+            })}
+            {filteredCustomers.length === 0 && <p className="muted">No customers yet.</p>}
+          </div>
         </div>
       ) : activeTab === "board" ? (
         <div className="board">
@@ -207,10 +258,21 @@ export default function Board({ session }: { session: Session }) {
       {showNewJob && (
         <NewJobModal
           statuses={statuses}
+          customers={customers}
           userId={session.user.id}
           onClose={() => setShowNewJob(false)}
           onCreated={() => {
             setShowNewJob(false);
+            loadAll();
+          }}
+        />
+      )}
+
+      {showNewCustomer && (
+        <NewCustomerModal
+          onClose={() => setShowNewCustomer(false)}
+          onCreated={() => {
+            setShowNewCustomer(false);
             loadAll();
           }}
         />
@@ -222,6 +284,20 @@ export default function Board({ session }: { session: Session }) {
           statuses={statuses}
           userId={session.user.id}
           onClose={() => setSelectedJob(null)}
+          onChanged={loadAll}
+        />
+      )}
+
+      {selectedCustomer && (
+        <CustomerDetailModal
+          customer={selectedCustomer}
+          jobs={jobs.filter((j) => j.customer_id === selectedCustomer.id)}
+          statuses={statuses}
+          onClose={() => setSelectedCustomer(null)}
+          onOpenJob={(job) => {
+            setSelectedCustomer(null);
+            setSelectedJob(job);
+          }}
           onChanged={loadAll}
         />
       )}
