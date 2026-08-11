@@ -47,7 +47,7 @@ export default function NewJobModal({
         } else {
           const { data: newCustomer, error: customerErr } = await supabase
             .from("customers")
-            .insert({ name: trimmedName })
+            .insert({ name: trimmedName, address: address || null })
             .select()
             .single();
           if (customerErr) throw customerErr;
