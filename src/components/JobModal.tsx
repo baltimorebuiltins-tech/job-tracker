@@ -5,8 +5,23 @@ import {
   JobStatus,
   ChecklistItem,
   JobFile,
+  FileCategory,
+  FILE_CATEGORIES,
 } from "../supabaseClient";
 import StatusBadge from "./StatusBadge";
+
+function categoryFolder(category: FileCategory) {
+  switch (category) {
+    case "drawing":
+      return "Drawings";
+    case "invoice":
+      return "Invoices";
+    case "receipt":
+      return "Receipts";
+    default:
+      return "Other";
+  }
+}
 
 export default function JobModal({
   job,
@@ -26,6 +41,7 @@ export default function JobModal({
   const [newItemText, setNewItemText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadCategory, setUploadCategory] = useState<FileCategory>("drawing");
   const [notes, setNotes] = useState(job.notes ?? "");
 
   useEffect(() => {
@@ -101,11 +117,12 @@ export default function JobModal({
     setUploadError(null);
     try {
       const base64 = await fileToBase64(file);
+      const basePath = job.dropbox_folder_path || `/${job.name}`;
       const res = await fetch("/api/dropbox-upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          path: job.dropbox_folder_path || `/${job.name}`,
+          path: `${basePath}/${categoryFolder(uploadCategory)}`,
           fileName: file.name,
           fileBase64: base64,
         }),
@@ -121,6 +138,7 @@ export default function JobModal({
         dropbox_path: result.dropboxPath,
         dropbox_shared_link: result.sharedLink,
         size_bytes: result.sizeBytes,
+        category: uploadCategory,
         uploaded_by: userId,
       });
       loadFiles();
@@ -182,7 +200,23 @@ export default function JobModal({
         </div>
 
         <div className="job-section">
-          <label>Checklist</label>
+          <label>
+            Checklist
+            {checklist.length > 0 &&
+              ` (${checklist.filter((i) => i.is_done).length}/${checklist.length})`}
+          </label>
+          {checklist.length > 0 && (
+            <div className="checklist-progress-bar">
+              <div
+                className="checklist-progress-fill"
+                style={{
+                  width: `${
+                    (checklist.filter((i) => i.is_done).length / checklist.length) * 100
+                  }%`,
+                }}
+              />
+            </div>
+          )}
           <ul className="checklist">
             {checklist.map((item) => (
               <li key={item.id}>
@@ -211,23 +245,49 @@ export default function JobModal({
         </div>
 
         <div className="job-section">
-          <label>Drawings &amp; files (synced to Dropbox)</label>
-          <ul className="file-list">
-            {files.map((f) => (
-              <li key={f.id}>
-                {f.dropbox_shared_link ? (
-                  <a href={f.dropbox_shared_link} target="_blank" rel="noreferrer">
-                    {f.file_name}
-                  </a>
-                ) : (
-                  <span>{f.file_name}</span>
-                )}
-                <span className="muted"> · {new Date(f.uploaded_at).toLocaleDateString()}</span>
-              </li>
-            ))}
-            {files.length === 0 && <li className="muted">No files yet.</li>}
-          </ul>
-          <input type="file" onChange={handleFileUpload} disabled={uploading} />
+          <label>Files (synced to Dropbox)</label>
+
+          {FILE_CATEGORIES.map(({ value, label }) => {
+            const group = files.filter((f) => f.category === value);
+            if (group.length === 0) return null;
+            return (
+              <div key={value} className="file-group">
+                <div className="file-group-label">{label}s</div>
+                <ul className="file-list">
+                  {group.map((f) => (
+                    <li key={f.id}>
+                      {f.dropbox_shared_link ? (
+                        <a href={f.dropbox_shared_link} target="_blank" rel="noreferrer">
+                          {f.file_name}
+                        </a>
+                      ) : (
+                        <span>{f.file_name}</span>
+                      )}
+                      <span className="muted">
+                        {" "}
+                        · {new Date(f.uploaded_at).toLocaleDateString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+          {files.length === 0 && <p className="muted">No files yet.</p>}
+
+          <div className="upload-row">
+            <select
+              value={uploadCategory}
+              onChange={(e) => setUploadCategory(e.target.value as FileCategory)}
+            >
+              {FILE_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <input type="file" onChange={handleFileUpload} disabled={uploading} />
+          </div>
           {uploading && <p className="notice-text">Uploading to Dropbox…</p>}
           {uploadError && <p className="error-text">{uploadError}</p>}
         </div>

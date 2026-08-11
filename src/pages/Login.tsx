@@ -41,8 +41,10 @@ export default function Login() {
   return (
     <div className="center-screen">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>Baltimore Builtins</h1>
-        <p className="subtitle">Job Tracker</p>
+        <img src="/logo.png" alt="Baltimore Built-Ins" className="auth-logo" />
+        <p className="subtitle" style={{ textAlign: "center", marginTop: -8 }}>
+          Job Tracker
+        </p>
 
         {mode === "sign-up" && (
           <label>

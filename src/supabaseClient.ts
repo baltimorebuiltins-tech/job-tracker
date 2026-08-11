@@ -44,6 +44,15 @@ export type ChecklistItem = {
   created_at: string;
 };
 
+export type FileCategory = "drawing" | "invoice" | "receipt" | "other";
+
+export const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
+  { value: "drawing", label: "Drawing" },
+  { value: "invoice", label: "Invoice" },
+  { value: "receipt", label: "Receipt" },
+  { value: "other", label: "Other" },
+];
+
 export type JobFile = {
   id: string;
   job_id: string;
@@ -51,6 +60,7 @@ export type JobFile = {
   dropbox_path: string;
   dropbox_shared_link: string | null;
   size_bytes: number | null;
+  category: FileCategory;
   uploaded_by: string | null;
   uploaded_at: string;
 };
