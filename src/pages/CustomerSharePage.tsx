@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import FileThumb from "../components/FileThumb";
 
 type ShareInfo = {
   name: string;
@@ -91,19 +92,11 @@ export default function CustomerSharePage() {
           {Object.entries(drawingsByJob).map(([jobName, files]) => (
             <div key={jobName} className="share-job-group">
               <h3>{jobName}</h3>
-              <ul className="file-list">
+              <div className="file-thumb-grid">
                 {files.map((f, i) => (
-                  <li key={i}>
-                    {f.dropbox_shared_link ? (
-                      <a href={f.dropbox_shared_link} target="_blank" rel="noreferrer">
-                        {f.file_name}
-                      </a>
-                    ) : (
-                      <span>{f.file_name}</span>
-                    )}
-                  </li>
+                  <FileThumb key={i} file={f} editable={false} />
                 ))}
-              </ul>
+              </div>
             </div>
           ))}
         </div>

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { supabase, Customer, Job, JobFile, JobStatus } from "../supabaseClient";
 import StatusBadge from "./StatusBadge";
+import FileThumb from "./FileThumb";
 
 export default function CustomerDetailModal({
   customer,
@@ -141,21 +142,12 @@ export default function CustomerDetailModal({
 
         <div className="job-section">
           <label>Drawings &amp; files across all jobs</label>
-          <ul className="file-list">
+          <div className="file-thumb-grid">
             {drawings.map((f) => (
-              <li key={f.id}>
-                {f.dropbox_shared_link ? (
-                  <a href={f.dropbox_shared_link} target="_blank" rel="noreferrer">
-                    {f.file_name}
-                  </a>
-                ) : (
-                  <span>{f.file_name}</span>
-                )}
-                <span className="muted"> · {f.jobName}</span>
-              </li>
+              <FileThumb key={f.id} file={f} editable onDeleted={loadDrawings} onNoteChanged={loadDrawings} />
             ))}
-            {drawings.length === 0 && <li className="muted">No files yet.</li>}
-          </ul>
+          </div>
+          {drawings.length === 0 && <p className="muted">No files yet.</p>}
         </div>
 
         <div className="modal-actions">

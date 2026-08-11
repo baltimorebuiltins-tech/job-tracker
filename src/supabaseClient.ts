@@ -92,6 +92,7 @@ export type JobFile = {
   dropbox_shared_link: string | null;
   size_bytes: number | null;
   category: FileCategory;
+  note: string | null;
   uploaded_by: string | null;
   uploaded_at: string;
 };

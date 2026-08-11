@@ -10,6 +10,7 @@ import {
 } from "../supabaseClient";
 import StatusBadge from "./StatusBadge";
 import PaymentsSection from "./PaymentsSection";
+import FileThumb from "./FileThumb";
 
 function categoryFolder(category: FileCategory) {
   switch (category) {
@@ -258,23 +259,17 @@ export default function JobModal({
             return (
               <div key={value} className="file-group">
                 <div className="file-group-label">{label}s</div>
-                <ul className="file-list">
+                <div className="file-thumb-grid">
                   {group.map((f) => (
-                    <li key={f.id}>
-                      {f.dropbox_shared_link ? (
-                        <a href={f.dropbox_shared_link} target="_blank" rel="noreferrer">
-                          {f.file_name}
-                        </a>
-                      ) : (
-                        <span>{f.file_name}</span>
-                      )}
-                      <span className="muted">
-                        {" "}
-                        · {new Date(f.uploaded_at).toLocaleDateString()}
-                      </span>
-                    </li>
+                    <FileThumb
+                      key={f.id}
+                      file={f}
+                      editable
+                      onDeleted={loadFiles}
+                      onNoteChanged={loadFiles}
+                    />
                   ))}
-                </ul>
+                </div>
               </div>
             );
           })}
