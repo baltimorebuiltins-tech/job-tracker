@@ -11,9 +11,12 @@ import {
 import StatusBadge from "./StatusBadge";
 import PaymentsSection from "./PaymentsSection";
 import FileThumb from "./FileThumb";
+import EstimateUpload from "./EstimateUpload";
 
 function categoryFolder(category: FileCategory) {
   switch (category) {
+    case "estimate":
+      return "Estimates";
     case "drawing":
       return "Drawings";
     case "invoice":
@@ -188,6 +191,14 @@ export default function JobModal({
             <p>{job.due_date || "—"}</p>
           </div>
           <div>
+            <label>Estimate total</label>
+            <p>
+              {job.estimate_total != null
+                ? `$${job.estimate_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                : "—"}
+            </p>
+          </div>
+          <div>
             <label>Dropbox folder</label>
             <p className="mono">{job.dropbox_folder_path}</p>
           </div>
@@ -248,6 +259,18 @@ export default function JobModal({
             />
             <button type="submit">Add</button>
           </form>
+        </div>
+
+        <div className="job-section">
+          <label>Estimate</label>
+          <EstimateUpload
+            job={job}
+            userId={userId}
+            onDone={() => {
+              loadFiles();
+              onChanged();
+            }}
+          />
         </div>
 
         <div className="job-section">

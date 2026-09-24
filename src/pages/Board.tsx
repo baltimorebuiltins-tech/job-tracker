@@ -56,6 +56,11 @@ export default function Board({ session }: { session: Session }) {
     setStatuses(statusData ?? []);
     setCustomers(customerData ?? []);
     setRole((profileData?.role as Role) ?? "member");
+    setSelectedJob((prev) => {
+      if (!prev) return prev;
+      const fresh = (jobData ?? []).find((j) => j.id === prev.id);
+      return fresh ?? prev;
+    });
 
     const nextCounts: Record<string, JobCounts> = {};
     for (const item of checklistData ?? []) {

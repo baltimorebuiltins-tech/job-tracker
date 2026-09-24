@@ -24,6 +24,7 @@ export type Job = {
   due_date: string | null;
   notes: string | null;
   dropbox_folder_path: string | null;
+  estimate_total: number | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -75,9 +76,10 @@ export type ChecklistItem = {
   created_at: string;
 };
 
-export type FileCategory = "drawing" | "invoice" | "receipt" | "other";
+export type FileCategory = "drawing" | "invoice" | "receipt" | "estimate" | "other";
 
 export const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
+  { value: "estimate", label: "Estimate" },
   { value: "drawing", label: "Drawing" },
   { value: "invoice", label: "Invoice" },
   { value: "receipt", label: "Receipt" },
