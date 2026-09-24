@@ -1,9 +1,20 @@
 import * as XLSX from "xlsx";
 import pdfMake from "./pdfMakeSetup";
 
-export type EstimateLineItem = {
-  qty: string;
-  descriptionLines: string[];
+export type ParsedEstimateRoom = {
+  roomName: string;
+  detail: string;
+  price: number;
+};
+
+export type ParsedEstimate = {
+  rooms: ParsedEstimateRoom[];
+  delivery: number;
+};
+
+export type EstimateRoomInput = {
+  roomName: string;
+  detail: string;
   price: number;
 };
 
@@ -20,40 +31,39 @@ function findKey(row: Record<string, any>, candidates: string[]): string | null 
   return null;
 }
 
-export function parseEstimateWorkbook(data: ArrayBuffer): EstimateLineItem[] {
+function toNumber(raw: any): number {
+  if (typeof raw === "number") return raw;
+  return parseFloat(String(raw ?? "").replace(/[^0-9.-]/g, "")) || 0;
+}
+
+export function parseEstimateWorkbook(data: ArrayBuffer): ParsedEstimate {
   const wb = XLSX.read(data, { type: "array" });
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const rows: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-  return rows
-    .map((row) => {
-      const qtyKey = findKey(row, ["qty", "quantity"]);
-      const descKey = findKey(row, ["description", "desc", "item"]);
-      const priceKey = findKey(row, [
-        "price",
-        "line total",
-        "linetotal",
-        "amount",
-        "total",
-        "cost",
-      ]);
+  const rooms: ParsedEstimateRoom[] = [];
+  let delivery = 0;
 
-      const qty = qtyKey ? String(row[qtyKey]).trim() : "";
-      const rawDesc = descKey ? String(row[descKey]) : "";
-      const descriptionLines = rawDesc
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter(Boolean);
+  for (const row of rows) {
+    const nameKey = findKey(row, ["closet name", "closet", "room name", "room"]);
+    const detailKey = findKey(row, ["color/finish", "color / finish", "color", "finish", "detail"]);
+    const priceKey = findKey(row, ["total", "price", "line total", "linetotal", "amount", "cost"]);
 
-      const priceRaw = priceKey ? row[priceKey] : 0;
-      const price =
-        typeof priceRaw === "number"
-          ? priceRaw
-          : parseFloat(String(priceRaw).replace(/[^0-9.-]/g, "")) || 0;
+    const roomName = nameKey ? String(row[nameKey]).trim() : "";
+    if (!roomName) continue;
 
-      return { qty: qty || "1", descriptionLines, price };
-    })
-    .filter((item) => item.descriptionLines.length > 0);
+    const detail = detailKey ? String(row[detailKey]).trim() : "";
+    const price = priceKey ? toNumber(row[priceKey]) : 0;
+
+    if (/^delivery$/i.test(roomName)) {
+      delivery += price;
+      continue;
+    }
+
+    rooms.push({ roomName, detail, price });
+  }
+
+  return { rooms, delivery };
 }
 
 async function fetchLogoDataUrl(): Promise<string> {
@@ -77,37 +87,47 @@ export async function generateEstimatePdfBase64(opts: {
   customerName: string;
   estimateNumber: string;
   date: string;
-  items: EstimateLineItem[];
+  rooms: EstimateRoomInput[];
+  delivery: number;
   preparedBy: string;
 }): Promise<{ base64: string; total: number }> {
-  const total = opts.items.reduce((sum, i) => sum + i.price, 0);
+  const roomsTotal = opts.rooms.reduce((sum, r) => sum + r.price, 0);
+  const total = roomsTotal + (opts.delivery || 0);
   const logoDataUrl = await fetchLogoDataUrl();
 
   const tableBody: any[] = [
     [
-      { text: "Qty", style: "tableHeader" },
-      { text: "Description", style: "tableHeader" },
-      { text: "Line total", style: "tableHeader", alignment: "right" },
+      { text: "Room / Closet", style: "tableHeader" },
+      { text: "Color / Finish", style: "tableHeader" },
+      { text: "Price", style: "tableHeader", alignment: "right" },
     ],
-    ...opts.items.map((item, i) => {
+    ...opts.rooms.map((room, i) => {
       const shaded = i % 2 === 0;
-      const descStack = item.descriptionLines.map((line, idx) => ({
-        text: (idx === 0 ? "" : "• ") + line,
-        bold: idx === 0,
-        margin: idx === 0 ? [0, 0, 0, 2] : [10, 0, 0, 2],
-        fontSize: idx === 0 ? 9.5 : 8.5,
-      }));
       return [
-        { text: item.qty, fillColor: shaded ? "#fbe3d5" : null, margin: [0, 4, 0, 4] },
-        { stack: descStack, fillColor: shaded ? "#fbe3d5" : null, margin: [0, 4, 0, 4] },
         {
-          text: formatMoney(item.price),
+          text: room.roomName,
+          bold: true,
+          fillColor: shaded ? "#fbe3d5" : null,
+          margin: [0, 4, 0, 4],
+        },
+        {
+          text: room.detail || "",
+          fillColor: shaded ? "#fbe3d5" : null,
+          margin: [0, 4, 0, 4],
+        },
+        {
+          text: formatMoney(room.price),
           alignment: "right",
           fillColor: shaded ? "#fbe3d5" : null,
           margin: [0, 4, 0, 4],
         },
       ];
     }),
+    [
+      { text: "Delivery", bold: true, margin: [0, 4, 0, 4] },
+      { text: "", margin: [0, 4, 0, 4] },
+      { text: formatMoney(opts.delivery || 0), alignment: "right", margin: [0, 4, 0, 4] },
+    ],
     [
       { text: "" },
       { text: "Total", alignment: "right", bold: true },
@@ -149,7 +169,7 @@ export async function generateEstimatePdfBase64(opts: {
       },
       { text: " ", margin: [0, 10, 0, 10] },
       {
-        table: { headerRows: 1, widths: [30, "*", 70], body: tableBody },
+        table: { headerRows: 1, widths: ["auto", "*", 70], body: tableBody },
         layout: {
           hLineWidth: () => 0.5,
           vLineWidth: () => 0.5,

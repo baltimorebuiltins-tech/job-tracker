@@ -12,6 +12,7 @@ import StatusBadge from "./StatusBadge";
 import PaymentsSection from "./PaymentsSection";
 import FileThumb from "./FileThumb";
 import EstimateUpload from "./EstimateUpload";
+import EstimateRoomsEditor from "./EstimateRoomsEditor";
 
 function categoryFolder(category: FileCategory) {
   switch (category) {
@@ -50,6 +51,7 @@ export default function JobModal({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadCategory, setUploadCategory] = useState<FileCategory>("drawing");
   const [notes, setNotes] = useState(job.notes ?? "");
+  const [estimateVersion, setEstimateVersion] = useState(0);
 
   useEffect(() => {
     loadChecklist();
@@ -269,7 +271,14 @@ export default function JobModal({
             onDone={() => {
               loadFiles();
               onChanged();
+              setEstimateVersion((v) => v + 1);
             }}
+          />
+          <EstimateRoomsEditor
+            job={job}
+            userId={userId}
+            version={estimateVersion}
+            onTotalChanged={onChanged}
           />
         </div>
 

@@ -25,6 +25,7 @@ export type Job = {
   notes: string | null;
   dropbox_folder_path: string | null;
   estimate_total: number | null;
+  estimate_delivery: number | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -97,6 +98,16 @@ export type JobFile = {
   note: string | null;
   uploaded_by: string | null;
   uploaded_at: string;
+};
+
+export type EstimateRoom = {
+  id: string;
+  job_id: string;
+  room_name: string;
+  detail: string | null;
+  price: number;
+  position: number;
+  created_at: string;
 };
 
 export type Role = "admin" | "member";

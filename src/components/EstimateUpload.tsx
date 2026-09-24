@@ -21,10 +21,10 @@ export default function EstimateUpload({
     setError(null);
     try {
       const buffer = await file.arrayBuffer();
-      const items = parseEstimateWorkbook(buffer);
-      if (items.length === 0) {
+      const { rooms, delivery } = parseEstimateWorkbook(buffer);
+      if (rooms.length === 0) {
         throw new Error(
-          "Couldn't find any line items in that file. Make sure it has Qty, Description, and Price columns."
+          "Couldn't find any rooms in that file. Make sure it has Closet Name, Color/Finish, and Total columns."
         );
       }
 
@@ -35,11 +35,33 @@ export default function EstimateUpload({
         .single();
       const preparedBy = profile?.full_name || profile?.email || "";
 
-      const { base64, total } = await generateEstimatePdfBase64({
+      // Replace any existing rooms for this job with the freshly uploaded set.
+      await supabase.from("estimate_rooms").delete().eq("job_id", job.id);
+      const { error: insertErr } = await supabase.from("estimate_rooms").insert(
+        rooms.map((r, i) => ({
+          job_id: job.id,
+          room_name: r.roomName,
+          detail: r.detail,
+          price: r.price,
+          position: i,
+        }))
+      );
+      if (insertErr) throw insertErr;
+
+      const roomsTotal = rooms.reduce((sum, r) => sum + r.price, 0);
+      const total = roomsTotal + delivery;
+
+      await supabase
+        .from("jobs")
+        .update({ estimate_delivery: delivery, estimate_total: total })
+        .eq("id", job.id);
+
+      const { base64 } = await generateEstimatePdfBase64({
         customerName: job.client ?? "",
         estimateNumber: job.job_number ?? job.id.slice(0, 6),
         date: new Date().toLocaleDateString(),
-        items,
+        rooms,
+        delivery,
         preparedBy,
       });
 
@@ -71,8 +93,6 @@ export default function EstimateUpload({
         uploaded_by: userId,
       });
 
-      await supabase.from("jobs").update({ estimate_total: total }).eq("id", job.id);
-
       onDone();
     } catch (err: any) {
       setError(err.message ?? "Something went wrong.");
@@ -85,9 +105,10 @@ export default function EstimateUpload({
   return (
     <div className="estimate-upload">
       <p className="muted">
-        Upload a spreadsheet with <strong>Qty</strong>, <strong>Description</strong>, and{" "}
-        <strong>Price</strong> columns — it's converted into a branded PDF estimate and synced to
-        this job automatically.{" "}
+        Upload a spreadsheet with <strong>Closet Name</strong>, <strong>Color/Finish</strong>, and{" "}
+        <strong>Total</strong> columns (plus an optional row named "Delivery") — it's converted into
+        a branded PDF estimate and synced to this job automatically. Re-uploading replaces the
+        current room list below.{" "}
         <a href="/estimate-template.csv" download>
           Download a template
         </a>
