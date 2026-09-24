@@ -152,43 +152,52 @@ export default function EstimateRoomsEditor({
 
   if (rooms.length === 0) return null;
 
+  let running = 0;
+
   return (
     <div className="estimate-rooms">
       <div className="estimate-rooms-header">
         <span>Room</span>
         <span>Color / Finish</span>
         <span>Price</span>
+        <span>Running total</span>
         <span />
       </div>
-      {rooms.map((room) => (
-        <div key={room.id} className="estimate-rooms-row">
-          <input
-            type="text"
-            value={room.room_name}
-            onChange={(e) => updateLocalField(room.id, "room_name", e.target.value)}
-            onBlur={() => saveRoom(rooms.find((r) => r.id === room.id)!)}
-          />
-          <input
-            type="text"
-            value={room.detail ?? ""}
-            onChange={(e) => updateLocalField(room.id, "detail", e.target.value)}
-            onBlur={() => saveRoom(rooms.find((r) => r.id === room.id)!)}
-          />
-          <div className="estimate-price-input">
-            <span className="payment-currency">$</span>
+      {rooms.map((room) => {
+        running += room.price ?? 0;
+        return (
+          <div key={room.id} className="estimate-rooms-row">
             <input
-              type="number"
-              className="payment-amount-input"
-              value={room.price}
-              onChange={(e) => updateLocalPrice(room.id, e.target.value)}
+              type="text"
+              value={room.room_name}
+              onChange={(e) => updateLocalField(room.id, "room_name", e.target.value)}
               onBlur={() => saveRoom(rooms.find((r) => r.id === room.id)!)}
             />
+            <input
+              type="text"
+              value={room.detail ?? ""}
+              onChange={(e) => updateLocalField(room.id, "detail", e.target.value)}
+              onBlur={() => saveRoom(rooms.find((r) => r.id === room.id)!)}
+            />
+            <div className="estimate-price-input">
+              <span className="payment-currency">$</span>
+              <input
+                type="number"
+                className="payment-amount-input"
+                value={room.price}
+                onChange={(e) => updateLocalPrice(room.id, e.target.value)}
+                onBlur={() => saveRoom(rooms.find((r) => r.id === room.id)!)}
+              />
+            </div>
+            <span className="estimate-running-total">
+              ${running.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </span>
+            <button type="button" className="link-button" onClick={() => deleteRoom(room)}>
+              Remove
+            </button>
           </div>
-          <button type="button" className="link-button" onClick={() => deleteRoom(room)}>
-            Remove
-          </button>
-        </div>
-      ))}
+        );
+      })}
 
       <div className="estimate-rooms-row estimate-delivery-row">
         <span className="estimate-delivery-label">Delivery</span>
@@ -203,6 +212,9 @@ export default function EstimateRoomsEditor({
             onBlur={saveDelivery}
           />
         </div>
+        <span className="estimate-running-total">
+          ${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+        </span>
         <span />
       </div>
 

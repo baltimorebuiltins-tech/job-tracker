@@ -24,7 +24,7 @@ export default function EstimateUpload({
       const { rooms, delivery } = parseEstimateWorkbook(buffer);
       if (rooms.length === 0) {
         throw new Error(
-          "Couldn't find any rooms in that file. Make sure it has Closet Name, Color/Finish, and Total columns."
+          "Couldn't find any rooms in that file. Make sure it has Closet Name, Color/Finish, and Final Price columns."
         );
       }
 
@@ -106,8 +106,8 @@ export default function EstimateUpload({
     <div className="estimate-upload">
       <p className="muted">
         Upload a spreadsheet with <strong>Closet Name</strong>, <strong>Color/Finish</strong>, and{" "}
-        <strong>Total</strong> columns (plus an optional row named "Delivery") — it's converted into
-        a branded PDF estimate and synced to this job automatically. Re-uploading replaces the
+        <strong>Final Price</strong> columns (plus an optional row named "Delivery") — it's converted
+        into a branded PDF estimate and synced to this job automatically. Re-uploading replaces the
         current room list below.{" "}
         <a href="/estimate-template.csv" download>
           Download a template

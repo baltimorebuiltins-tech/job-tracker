@@ -47,10 +47,23 @@ export function parseEstimateWorkbook(data: ArrayBuffer): ParsedEstimate {
   for (const row of rows) {
     const nameKey = findKey(row, ["closet name", "closet", "room name", "room"]);
     const detailKey = findKey(row, ["color/finish", "color / finish", "color", "finish", "detail"]);
-    const priceKey = findKey(row, ["total", "price", "line total", "linetotal", "amount", "cost"]);
+    // "final price" is checked first so it wins over columns like "Labor total" or
+    // "cost total" that also contain the word "total".
+    const priceKey = findKey(row, [
+      "final price",
+      "total",
+      "price",
+      "line total",
+      "linetotal",
+      "amount",
+      "cost",
+    ]);
 
     const roomName = nameKey ? String(row[nameKey]).trim() : "";
     if (!roomName) continue;
+
+    // Skip a trailing "Totals" / "Total" summary row from the spreadsheet itself.
+    if (/^totals?$/i.test(roomName)) continue;
 
     const detail = detailKey ? String(row[detailKey]).trim() : "";
     const price = priceKey ? toNumber(row[priceKey]) : 0;
@@ -83,9 +96,11 @@ function formatMoney(n: number) {
 
 const MAROON = "#8a1c1c";
 
-export async function generateEstimatePdfBase64(opts: {
+async function generateLineItemPdfBase64(opts: {
+  documentTitle: string;
+  numberLabel: string;
   customerName: string;
-  estimateNumber: string;
+  documentNumber: string;
   date: string;
   rooms: EstimateRoomInput[];
   delivery: number;
@@ -95,14 +110,17 @@ export async function generateEstimatePdfBase64(opts: {
   const total = roomsTotal + (opts.delivery || 0);
   const logoDataUrl = await fetchLogoDataUrl();
 
+  let running = 0;
   const tableBody: any[] = [
     [
       { text: "Room / Closet", style: "tableHeader" },
       { text: "Color / Finish", style: "tableHeader" },
       { text: "Price", style: "tableHeader", alignment: "right" },
+      { text: "Running Total", style: "tableHeader", alignment: "right" },
     ],
     ...opts.rooms.map((room, i) => {
       const shaded = i % 2 === 0;
+      running += room.price;
       return [
         {
           text: room.roomName,
@@ -121,16 +139,24 @@ export async function generateEstimatePdfBase64(opts: {
           fillColor: shaded ? "#fbe3d5" : null,
           margin: [0, 4, 0, 4],
         },
+        {
+          text: formatMoney(running),
+          alignment: "right",
+          fillColor: shaded ? "#fbe3d5" : null,
+          margin: [0, 4, 0, 4],
+        },
       ];
     }),
     [
       { text: "Delivery", bold: true, margin: [0, 4, 0, 4] },
       { text: "", margin: [0, 4, 0, 4] },
       { text: formatMoney(opts.delivery || 0), alignment: "right", margin: [0, 4, 0, 4] },
+      { text: formatMoney(total), alignment: "right", margin: [0, 4, 0, 4] },
     ],
     [
       { text: "" },
       { text: "Total", alignment: "right", bold: true },
+      { text: "", alignment: "right" },
       { text: formatMoney(total), alignment: "right", bold: true },
     ],
   ];
@@ -141,7 +167,7 @@ export async function generateEstimatePdfBase64(opts: {
       {
         columns: [
           { image: logoDataUrl, width: 110 },
-          { text: "Estimate", style: "title", alignment: "right" },
+          { text: opts.documentTitle, style: "title", alignment: "right" },
         ],
       },
       { text: " ", margin: [0, 6, 0, 6] },
@@ -161,7 +187,7 @@ export async function generateEstimatePdfBase64(opts: {
             width: "auto",
             alignment: "right",
             stack: [
-              { text: [{ text: "Estimate # ", bold: true }, opts.estimateNumber], fontSize: 9 },
+              { text: [{ text: opts.numberLabel, bold: true }, opts.documentNumber], fontSize: 9 },
               { text: [{ text: "Date: ", bold: true }, opts.date], fontSize: 9 },
             ],
           },
@@ -169,7 +195,7 @@ export async function generateEstimatePdfBase64(opts: {
       },
       { text: " ", margin: [0, 10, 0, 10] },
       {
-        table: { headerRows: 1, widths: ["auto", "*", 70], body: tableBody },
+        table: { headerRows: 1, widths: ["auto", "*", 65, 80], body: tableBody },
         layout: {
           hLineWidth: () => 0.5,
           vLineWidth: () => 0.5,
@@ -178,7 +204,7 @@ export async function generateEstimatePdfBase64(opts: {
         },
       },
       { text: " ", margin: [0, 20, 0, 0] },
-      { text: `Estimate prepared by: ${opts.preparedBy}`, fontSize: 9 },
+      { text: `${opts.documentTitle} prepared by: ${opts.preparedBy}`, fontSize: 9 },
       { text: "Please reach out with any questions.", fontSize: 9 },
       { text: "Thank you for your business!", bold: true, color: MAROON, margin: [0, 6, 0, 0] },
     ],
@@ -192,4 +218,44 @@ export async function generateEstimatePdfBase64(opts: {
   const pdfDoc = pdfMake.createPdf(docDefinition);
   const base64 = await pdfDoc.getBase64();
   return { base64, total };
+}
+
+export async function generateEstimatePdfBase64(opts: {
+  customerName: string;
+  estimateNumber: string;
+  date: string;
+  rooms: EstimateRoomInput[];
+  delivery: number;
+  preparedBy: string;
+}): Promise<{ base64: string; total: number }> {
+  return generateLineItemPdfBase64({
+    documentTitle: "Estimate",
+    numberLabel: "Estimate # ",
+    customerName: opts.customerName,
+    documentNumber: opts.estimateNumber,
+    date: opts.date,
+    rooms: opts.rooms,
+    delivery: opts.delivery,
+    preparedBy: opts.preparedBy,
+  });
+}
+
+export async function generateInvoicePdfBase64(opts: {
+  customerName: string;
+  invoiceNumber: string;
+  date: string;
+  rooms: EstimateRoomInput[];
+  delivery: number;
+  preparedBy: string;
+}): Promise<{ base64: string; total: number }> {
+  return generateLineItemPdfBase64({
+    documentTitle: "Invoice",
+    numberLabel: "Invoice # ",
+    customerName: opts.customerName,
+    documentNumber: opts.invoiceNumber,
+    date: opts.date,
+    rooms: opts.rooms,
+    delivery: opts.delivery,
+    preparedBy: opts.preparedBy,
+  });
 }

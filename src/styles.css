@@ -248,16 +248,17 @@ button.link-button:hover { background: none; color: var(--primary-dark); text-de
 .estimate-upload { margin-bottom: 10px; }
 .estimate-rooms { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
 .estimate-rooms-header {
-  display: grid; grid-template-columns: 1.2fr 1.4fr 110px 60px; gap: 8px;
+  display: grid; grid-template-columns: 1.2fr 1.4fr 110px 100px 60px; gap: 8px;
   font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); font-weight: 600; padding: 0 2px;
 }
 .estimate-rooms-row {
-  display: grid; grid-template-columns: 1.2fr 1.4fr 110px 60px; gap: 8px; align-items: center;
+  display: grid; grid-template-columns: 1.2fr 1.4fr 110px 100px 60px; gap: 8px; align-items: center;
 }
 .estimate-rooms-row input[type="text"], .estimate-rooms-row input:not([type]) {
   padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px; font-size: 0.85rem; width: 100%;
 }
 .estimate-price-input { display: flex; align-items: center; gap: 4px; }
+.estimate-running-total { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
 .estimate-delivery-row { border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 4px; }
 .estimate-delivery-label { font-weight: 600; }
 .estimate-rooms-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 10px; flex-wrap: wrap; }

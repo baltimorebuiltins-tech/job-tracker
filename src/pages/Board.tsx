@@ -9,6 +9,7 @@ import CalendarView from "../components/CalendarView";
 import CalendarSyncPanel from "../components/CalendarSyncPanel";
 import RemindersBanner from "../components/RemindersBanner";
 import NewCustomerModal from "../components/NewCustomerModal";
+import NewInvoiceModal from "../components/NewInvoiceModal";
 import CustomerDetailModal from "../components/CustomerDetailModal";
 import WeekStrip from "../components/WeekStrip";
 import QuickNotes from "../components/QuickNotes";
@@ -23,6 +24,7 @@ export default function Board({ session }: { session: Session }) {
   const [search, setSearch] = useState("");
   const [showNewJob, setShowNewJob] = useState(false);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,12 @@ export default function Board({ session }: { session: Session }) {
             onChange={(e) => setSearch(e.target.value)}
           />
           <button onClick={() => setShowNewJob(true)}>+ New job</button>
+          <button className="secondary" onClick={() => setShowNewCustomer(true)}>
+            + New customer
+          </button>
+          <button className="secondary" onClick={() => setShowNewInvoice(true)}>
+            + New invoice
+          </button>
           <span className="muted">{session.user.email}</span>
           <button className="secondary" onClick={() => supabase.auth.signOut()}>
             Sign out
@@ -303,6 +311,15 @@ export default function Board({ session }: { session: Session }) {
             setShowNewCustomer(false);
             loadAll();
           }}
+        />
+      )}
+
+      {showNewInvoice && (
+        <NewInvoiceModal
+          jobs={jobs}
+          userId={session.user.id}
+          onClose={() => setShowNewInvoice(false)}
+          onCreated={loadAll}
         />
       )}
 

@@ -110,6 +110,26 @@ export type EstimateRoom = {
   created_at: string;
 };
 
+export type Invoice = {
+  id: string;
+  job_id: string;
+  invoice_number: string;
+  delivery: number;
+  total: number;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type InvoiceItem = {
+  id: string;
+  invoice_id: string;
+  item_name: string;
+  detail: string | null;
+  price: number;
+  position: number;
+  created_at: string;
+};
+
 export type Role = "admin" | "member";
 
 export type Profile = {
